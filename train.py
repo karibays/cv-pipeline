@@ -1,3 +1,14 @@
+# TODO:
+""" 
+    1. dataset analysis
+    2. dataset cleaning + upgrading
+    3. onnx format export
+    4. optimizer export
+    5. predict function
+    6. fastapi service
+    7. all options for config
+"""
+
 import os
 import glob
 import wandb
