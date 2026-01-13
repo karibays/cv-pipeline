@@ -1,0 +1,90 @@
+seed: 42
+enable_determenism: false
+
+model:
+  name: efficientnet_v2_s
+  num_classes: 5
+  pretrained: true
+
+loss:
+  name: cross_entropy
+  params:
+    label_smoothing: 0.1
+
+
+optimizer:
+  name: adam
+  params:
+    lr: 1e-4
+    weight_decay: 0.001
+
+scheduler:
+  name: cosine
+  params:
+    T_max: 20
+
+
+training:
+  epochs: 2
+  use_amp: true
+  early_stopping: true
+  patience: 3
+
+data:
+  img_size: 224
+  batch_size: 32
+  test_size: 0.2
+  num_workers: 4
+  shuffle: true
+
+transforms:
+  train:
+    - name: RandomResizedCrop
+      params:
+        size: 224
+        scale: [0.5, 1.0]
+
+    - name: TrivialAugmentWide
+
+    - name: PILToTensor
+
+    - name: ToDtype
+      params:
+        dtype: float32
+        scale: true
+
+    - name: Normalize
+      params:
+        mean: [0.3, 0.3, 0.3]
+        std:  [0.3, 0.3, 0.3]
+
+  val:
+    - name: Resize
+      params:
+        size: [224, 224]
+
+    - name: PILToTensor
+
+    - name: ToDtype
+      params:
+        dtype: float32
+        scale: true
+
+    - name: Normalize
+      params:
+        mean: [0.3, 0.3, 0.3]
+        std:  [0.3, 0.3, 0.3]
+
+metrics:
+  - accuracy
+  - balanced_accuracy
+
+wandb:
+  project: Human Face Emotions classification 2
+  run_name: test-multithread-8
+  enabled: true
+
+paths:
+  data_root: data/
+  output_dir: checkpoint/
+  checkpoint: best_model.pt
