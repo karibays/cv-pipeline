@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 from sklearn.metrics import balanced_accuracy_score
+from src.metrics import compute_metrics
 
 
 def train_one_epoch(
@@ -11,6 +12,7 @@ def train_one_epoch(
     optimizer,
     scheduler,
     scaler,
+    metrics_cfg,
     use_amp
 ):
     net.train()
@@ -51,19 +53,13 @@ def train_one_epoch(
     all_preds = torch.cat(all_preds).numpy()
     all_labels = torch.cat(all_labels).numpy()
 
-    acc = (all_preds == all_labels).mean()
-    bal_acc = balanced_accuracy_score(all_labels, all_preds)
+    metrics = compute_metrics(all_labels, all_preds, metrics_cfg)
+    metrics["loss"] = round(running_loss / len(loader), 4)
+    metrics["lr"] = lr
 
     if scheduler:
         scheduler.step()
         lr = scheduler.get_last_lr()[0]
-
-    metrics = {
-        "loss": round(running_loss / len(loader), 4),
-        "accuracy": round(acc * 100, 2),
-        "balanced_accuracy": round(bal_acc * 100, 2),
-        "lr": lr
-    }
 
     return all_preds, all_labels, metrics
 
@@ -71,7 +67,8 @@ def validate_one_epoch(
     net,
     loader,
     criterion,
-    device
+    device,
+    metrics_cfg
 ):
     net.eval()
 
@@ -94,13 +91,7 @@ def validate_one_epoch(
     all_preds = torch.cat(all_preds).numpy()
     all_labels = torch.cat(all_labels).numpy()
 
-    acc = (all_preds == all_labels).mean()
-    bal_acc = balanced_accuracy_score(all_labels, all_preds)
-
-    metrics = {
-        "loss": round(running_loss / len(loader), 4),
-        "accuracy": round(acc * 100, 2),
-        "balanced_accuracy": round(bal_acc * 100, 2),
-    }
+    metrics = compute_metrics(all_labels, all_preds, metrics_cfg)
+    metrics["loss"] = round(running_loss / len(loader), 4)
 
     return all_preds, all_labels, metrics

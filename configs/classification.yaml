@@ -5,12 +5,13 @@ model:
   name: efficientnet_v2_s
   num_classes: 5
   pretrained: true
+  freeze_backbone: false
+  freeze_classifier: false
 
 loss:
   name: cross_entropy
   params:
     label_smoothing: 0.1
-
 
 optimizer:
   name: adam
@@ -23,9 +24,8 @@ scheduler:
   params:
     T_max: 20
 
-
 training:
-  epochs: 2
+  epochs: 3
   use_amp: true
   early_stopping: true
   patience: 3
@@ -34,7 +34,7 @@ data:
   img_size: 224
   batch_size: 32
   test_size: 0.2
-  num_workers: 4
+  num_workers: 6
   shuffle: true
 
 transforms:
@@ -76,8 +76,8 @@ transforms:
         std:  [0.3, 0.3, 0.3]
 
 metrics:
-  - accuracy
-  - balanced_accuracy
+  - name: accuracy
+  - name: balanced_accuracy
 
 wandb:
   project: Human Face Emotions classification 2

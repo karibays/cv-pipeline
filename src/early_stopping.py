@@ -1,4 +1,5 @@
 import torch
+import os
 
 
 class EarlyStopping:
@@ -50,3 +51,15 @@ class EarlyStopping:
             self.logger.info(message)
         else:
             print(message)
+
+
+def build_early_stopper(config, logger):
+    early_stopper = None
+    if config['training']['early_stopping']:
+        early_stopper = EarlyStopping(
+            patience=config["training"]["patience"],
+            mode="max",  # потому что balanced_accuracy должна расти
+            checkpoint_path=os.path.join(config["paths"]["output_dir"], config["paths"]["checkpoint"]),
+            logger=logger
+        )
+    return early_stopper

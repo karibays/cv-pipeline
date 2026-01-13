@@ -38,6 +38,46 @@ def replace_classifier(model_name, model, num_classes):
     return model
 
 
+def freeze_layers(config, model):
+    model_name = config['model']['name']
+    freeze_backbone = config['model']['freeze_backbone']
+    freeze_classifier = config['model']['freeze_classifier']
+
+    if model_name.startswith(('efficientnet', 'mobilenet')):
+        if freeze_backbone:
+            for p in model.features.parameters():
+                p.requires_grad = False
+
+        if freeze_classifier:
+            for p in model.classifier.parameters():
+                p.requires_grad = False
+
+    elif model_name.startswith('resnet'):
+        if freeze_backbone:
+            for name, module in model.named_children():
+                if name != 'fc':
+                    for p in module.parameters():
+                        p.requires_grad = False
+
+        if freeze_classifier:
+            for p in model.fc.parameters():
+                p.requires_grad = False
+
+    elif model_name.startswith('vit'):
+        if freeze_backbone:
+            for p in model.encoder.parameters():
+                p.requires_grad = False
+
+        if freeze_classifier:
+            for p in model.heads.parameters():
+                p.requires_grad = False
+
+    else:
+        raise ValueError(f"Unsupported model family: {model_name}")
+
+    return model
+
+
 def build_model(config):
     model_name = config['model']['name']
     pretrained = config['model']['pretrained']
@@ -54,5 +94,6 @@ def build_model(config):
     model = model_fn(weights='DEFAULT' if pretrained else None)
 
     model = replace_classifier(model_name, model, num_classes)
+    model = freeze_layers(config, model)
 
     return model
